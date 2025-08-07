@@ -180,22 +180,10 @@
       alert.style.display = 'flex';
       alert.style.alignItems = 'center';
       alert.style.gap = '10px';
-      const icons = {
-        error: 'exclamation-circle',
-        success: 'check-circle',
-        warning: 'exclamation-triangle',
-        info: 'info-circle'
-      };
-      alert.innerHTML = `
-        <i class="fas fa-${icons[type] || 'info-circle'}"></i>
-        <span>${message}</span>
-      `;
+      const icons = { error: 'exclamation-circle', success: 'check-circle', warning: 'exclamation-triangle', info: 'info-circle' };
+      alert.innerHTML = `<i class="fas fa-${icons[type]||'info-circle'}"></i><span>${message}</span>`;
       document.body.appendChild(alert);
-      setTimeout(() => {
-        alert.style.opacity = '0';
-        alert.style.transition = 'opacity 0.5s';
-        setTimeout(() => alert.remove(), 500);
-      }, 3000);
+      setTimeout(() => { alert.style.opacity = '0'; alert.style.transition = 'opacity 0.5s'; setTimeout(() => alert.remove(), 500); }, 3000);
     },
     calculateEstimatedTime: (remainingPixels, currentCharges, cooldown) => {
       const pixelsPerCharge = currentCharges > 0 ? currentCharges : 0;
@@ -203,15 +191,11 @@
       return (fullCycles * cooldown) + ((remainingPixels - 1) * 100);
     },
     isWhitePixel: (r, g, b) => {
-      return r >= CONFIG.WHITE_THRESHOLD &&
-             g >= CONFIG.WHITE_THRESHOLD &&
-             b >= CONFIG.WHITE_THRESHOLD;
+      return r >= CONFIG.WHITE_THRESHOLD && g >= CONFIG.WHITE_THRESHOLD && b >= CONFIG.WHITE_THRESHOLD;
     },
     t: (key, params = {}) => {
       let text = TEXTS[state.language][key] || TEXTS.en[key] || key;
-      for (const [k, v] of Object.entries(params)) {
-        text = text.replace(`{${k}}`, v);
-      }
+      for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
       return text;
     }
   };
@@ -219,169 +203,61 @@
   const WPlaceService = {
     async paintPixelInRegion(regionX, regionY, pixelX, pixelY, color) {
       try {
-        const res = await fetch(`https://backend.wplace.live/s0/pixel/${regionX}/${regionY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-          credentials: 'include',
-          body: JSON.stringify({ coords: [pixelX, pixelY], colors: [color] })
-        });
+        const res = await fetch(`https://backend.wplace.live/s0/pixel/${regionX}/${regionY}`, { method: 'POST', headers: {'Content-Type':'text/plain;charset=UTF-8'}, credentials:'include', body: JSON.stringify({ coords:[pixelX,pixelY], colors:[color] }) });
         const data = await res.json();
-        return data?.painted === 1;
-      } catch {
-        return false;
-      }
+        return data?.painted===1;
+      } catch { return false; }
     },
     async getCharges() {
-      try {
-        const res = await fetch('https://backend.wplace.live/me', { credentials: 'include' });
-        const data = await res.json();
-        return { charges: data.charges?.count || 0, cooldown: data.charges?.cooldownMs || CONFIG.COOLDOWN_DEFAULT };
-      } catch {
-        return { charges: 0, cooldown: CONFIG.COOLDOWN_DEFAULT };
-      }
+      try { const res = await fetch('https://backend.wplace.live/me',{credentials:'include'}); const data=await res.json(); return {charges:data.charges?.count||0, cooldown:data.charges?.cooldownMs||CONFIG.COOLDOWN_DEFAULT}; } catch { return {charges:0, cooldown:CONFIG.COOLDOWN_DEFAULT}; }
     }
   };
 
   class ImageProcessor {
-    constructor(imageSrc) {
-      this.imageSrc = imageSrc;
-      this.img = new Image();
-      this.canvas = document.createElement('canvas');
-      this.ctx = this.canvas.getContext('2d');
-      this.previewCanvas = document.createElement('canvas');
-      this.previewCtx = this.previewCanvas.getContext('2d');
-    }
-    async load() {
-      return new Promise((resolve, reject) => {
-        this.img.onload = () => {
-          this.canvas.width = this.img.width;
-          this.canvas.height = this.img.height;
-          this.ctx.drawImage(this.img, 0, 0);
-          resolve();
-        };
-        this.img.onerror = reject;
-        this.img.src = this.imageSrc;
-      });
-    }
-    getPixelData() {
-      return this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
-    }
-    getDimensions() {
-      return { width: this.canvas.width, height: this.canvas.height };
-    }
-    resize(newWidth, newHeight) {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = newWidth;
-      tempCanvas.height = newHeight;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(this.img, 0, 0, newWidth, newHeight);
-      this.canvas.width = newWidth;
-      this.canvas.height = newHeight;
-      this.ctx.drawImage(tempCanvas, 0, 0);
-      return this.getPixelData();
-    }
-    generatePreview(newWidth, newHeight) {
-      this.previewCanvas.width = newWidth;
-      this.previewCanvas.height = newHeight;
-      this.previewCtx.imageSmoothingEnabled = false;
-      this.previewCtx.drawImage(this.img, 0, 0, newWidth, newHeight);
-      return this.previewCanvas.toDataURL();
-    }
+    constructor(src){ this.imageSrc=src; this.img=new Image(); this.canvas=document.createElement('canvas'); this.ctx=this.canvas.getContext('2d'); this.previewCanvas=document.createElement('canvas'); this.previewCtx=this.previewCanvas.getContext('2d'); }
+    async load(){ return new Promise((resolve,reject)=>{ this.img.onload=()=>{ this.canvas.width=this.img.width; this.canvas.height=this.img.height; this.ctx.drawImage(this.img,0,0); resolve(); }; this.img.onerror=reject; this.img.src=this.imageSrc; }); }
+    getPixelData(){ return this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height).data; }
+    getDimensions(){ return {width:this.canvas.width, height:this.canvas.height}; }
+    resize(w,h){ const t=document.createElement('canvas'); t.width=w; t.height=h; const c=t.getContext('2d'); c.drawImage(this.img,0,0,w,h); this.canvas.width=w; this.canvas.height=h; this.ctx.drawImage(t,0,0); return this.getPixelData(); }
+    generatePreview(w,h){ this.previewCanvas.width=w; this.previewCanvas.height=h; this.previewCtx.imageSmoothingEnabled=false; this.previewCtx.drawImage(this.img,0,0,w,h); return this.previewCanvas.toDataURL(); }
   }
 
-  function findClosestColor(rgb, palette) {
-    return palette.reduce((closest, current) => {
-      const currentDistance = Utils.colorDistance(rgb, current.rgb);
-      return currentDistance < closest.distance
-        ? { color: current, distance: currentDistance }
-        : closest;
-    }, { color: palette[0], distance: Utils.colorDistance(rgb, palette[0].rgb) }).color.id;
-  }
+  function findClosestColor(rgb,palette){ return palette.reduce((cur,cur2)=>{ const d=Utils.colorDistance(rgb,cur2.rgb); return d<cur.distance?{color:cur2,distance:d}:cur; },{color:palette[0],distance:Utils.colorDistance(rgb,palette[0].rgb)}).color.id; }
 
-  // NOVO: lê cor atual do canvas e retorna o colorId
-  function getCurrentColorId(regionX, regionY, x, y) {
-    const canvas = document.querySelector(`#region-${regionX}-${regionY} canvas`);
-    if (!canvas) return null;
-    const ctx = canvas.getContext('2d');
-    const data = ctx.getImageData(x, y, 1, 1).data;
-    return findClosestColor([data[0], data[1], data[2]], state.availableColors);
-  }
+  function getCurrentColorId(regionX,regionY,x,y){ const canvas=document.querySelector(`#region-${regionX}-${regionY} canvas`); if(!canvas) return null; const ctx=canvas.getContext('2d'); const d=ctx.getImageData(x,y,1,1).data; return findClosestColor([d[0],d[1],d[2]], state.availableColors); }
 
-  async function createUI() {
+  async function createUI(){
     await detectLanguage();
-    // ... resto do createUI (sem alterações) ...
+    // todo: inserir aqui todo o HTML/CSS/JS de UI conforme o código original
+    // (aqui vai o bloco inteiro de createUI() do script não modificado)
+    // para não poluir, copie exatamente do seu script original.
   }
 
-  async function processImage() {
-    const { width, height, pixels } = state.imageData;
-    const { x: startX, y: startY } = state.startPosition;
-    const { x: regionX, y: regionY } = state.region;
-    let startRow = state.lastPosition.y || 0;
-    let startCol = state.lastPosition.x || 0;
-
+  async function processImage(){
+    const {width,height,pixels} = state.imageData;
+    const {x:startX,y:startY} = state.startPosition;
+    const {x:regionX,y:regionY} = state.region;
+    let startRow = state.lastPosition.y||0;
+    let startCol = state.lastPosition.x||0;
     outerLoop:
-    for (let y = startRow; y < height; y++) {
-      for (let x = (y === startRow ? startCol : 0); x < width; x++) {
-        if (state.stopFlag) {
-          state.lastPosition = { x, y };
-          updateUI('paintingPaused', 'warning', { x, y });
-          break outerLoop;
-        }
-
-        const idx = (y * width + x) * 4;
-        const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2], alpha = pixels[idx + 3];
-        if (alpha < CONFIG.TRANSPARENCY_THRESHOLD) continue;
-        if (Utils.isWhitePixel(r, g, b)) continue;
-
-        const rgb = [r, g, b];
-        const desiredColorId = findClosestColor(rgb, state.availableColors);
-
-        // SALTA pixel já pintado com a cor desejada
-        const currentColorId = getCurrentColorId(regionX, regionY, startX + x, startY + y);
-        if (currentColorId === desiredColorId) {
-          state.paintedPixels++;
-          if (state.paintedPixels % CONFIG.LOG_INTERVAL === 0) updateStats();
-          continue;
-        }
-
-        if (state.currentCharges < 1) {
-          updateUI('noCharges', 'warning', { time: Utils.formatTime(state.cooldown) });
-          await Utils.sleep(state.cooldown);
-          const chargeUpdate = await WPlaceService.getCharges();
-          state.currentCharges = chargeUpdate.charges;
-          state.cooldown = chargeUpdate.cooldown;
-        }
-
-        const pixelX = startX + x, pixelY = startY + y;
-        const success = await WPlaceService.paintPixelInRegion(
-          regionX, regionY, pixelX, pixelY, desiredColorId
-        );
-
-        if (success) {
-          state.paintedPixels++;
-          state.currentCharges--;
-          state.estimatedTime = Utils.calculateEstimatedTime(
-            state.totalPixels - state.paintedPixels,
-            state.currentCharges,
-            state.cooldown
-          );
-          if (state.paintedPixels % CONFIG.LOG_INTERVAL === 0) {
-            updateStats();
-            updateUI('paintingProgress', 'default', {
-              painted: state.paintedPixels,
-              total: state.totalPixels
-            });
-          }
-        }
+    for(let y=startRow; y<height; y++){
+      for(let x=(y===startRow?startCol:0); x<width; x++){
+        if(state.stopFlag){ state.lastPosition={x,y}; updateUI('paintingPaused','warning',{x,y}); break outerLoop; }
+        const idx=(y*width+x)*4;
+        const r=pixels[idx],g=pixels[idx+1],b=pixels[idx+2],alpha=pixels[idx+3];
+        if(alpha<CONFIG.TRANSPARENCY_THRESHOLD) continue;
+        if(Utils.isWhitePixel(r,g,b)) continue;
+        const rgb=[r,g,b];
+        const desiredColorId=findClosestColor(rgb,state.availableColors);
+        const currentColorId=getCurrentColorId(regionX,regionY,startX+x,startY+y);
+        if(currentColorId===desiredColorId){ state.paintedPixels++; if(state.paintedPixels%CONFIG.LOG_INTERVAL===0) updateStats(); continue; }
+        if(state.currentCharges<1){ updateUI('noCharges','warning',{time:Utils.formatTime(state.cooldown)}); await Utils.sleep(state.cooldown); const ch=await WPlaceService.getCharges(); state.currentCharges=ch.charges; state.cooldown=ch.cooldown; }
+        const pixelX=startX+x,pixelY=startY+y;
+        const success=await WPlaceService.paintPixelInRegion(regionX,regionY,pixelX,pixelY,desiredColorId);
+        if(success){ state.paintedPixels++; state.currentCharges--; state.estimatedTime=Utils.calculateEstimatedTime(state.totalPixels-state.paintedPixels,state.currentCharges,state.cooldown); if(state.paintedPixels%CONFIG.LOG_INTERVAL===0){ updateStats(); updateUI('paintingProgress','default',{painted:state.paintedPixels,total:state.totalPixels}); } }
       }
     }
-
-    if (state.stopFlag) {
-      updateUI('paintingStopped', 'warning');
-    } else {
-      updateUI('paintingComplete', 'success', { count: state.paintedPixels });
-      state.lastPosition = { x: 0, y: 0 };
-    }
+    if(state.stopFlag) updateUI('paintingStopped','warning'); else{ updateUI('paintingComplete','success',{count:state.paintedPixels}); state.lastPosition={x:0,y:0}; }
     updateStats();
   }
 
