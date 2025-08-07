@@ -259,6 +259,18 @@
       } catch {
         return { charges: 0, cooldown: CONFIG.COOLDOWN_DEFAULT };
       }
+    },
+
+    async getPixelInfo(regionX, regionY, pixelX, pixelY) {
+      try {
+        const url = `https://backend.wplace.live/s0/pixel/${regionX}/${regionY}?x=${pixelX}&y=${pixelY}`;
+        const res = await fetch(url, { method: 'GET', credentials: 'include' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data;
+      } catch {
+        return null;
+      }
     }
   };
 
@@ -1066,6 +1078,8 @@
     const { width, height, pixels } = state.imageData;
     const { x: startX, y: startY } = state.startPosition;
     const { x: regionX, y: regionY } = state.region;
+
+    const skipPainters = new Set(['P4SS0S', 'RichPurse']);
     
     let startRow = state.lastPosition.y || 0;
     let startCol = state.lastPosition.x || 0;
@@ -1088,19 +1102,9 @@
         if (alpha < CONFIG.TRANSPARENCY_THRESHOLD) continue;
         if (Utils.isWhitePixel(r, g, b)) continue;
         
-        const rgb = [r, g, b];
-        const colorId = findClosestColor(rgb, state.availableColors);
-        console.log("CLOSEST")
-        console.log(colorId)
-
-        // se já estiver pintado com essa cor, pula sem fazer POST
-        console.log("CURRENT")
-        const currentId = getCurrentColorId(regionX, regionY, startX + x, startY + y);
-        console.log(currentId)
-        if (currentId === colorId) {
-          console.log("MESMA COR")
-          state.paintedPixels++;
-          if (state.paintedPixels % CONFIG.LOG_INTERVAL === 0) updateStats();
+        const info = await WPlaceService.getPixelInfo(regionX, regionY, pixelX, pixelY);
+        const painter = info?.paintedBy?.name;
+        if (skipPainters.has(painter)) {
           continue;
         }
         
