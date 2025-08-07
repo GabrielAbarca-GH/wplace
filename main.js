@@ -1102,14 +1102,9 @@
         if (alpha < CONFIG.TRANSPARENCY_THRESHOLD) continue;
         if (Utils.isWhitePixel(r, g, b)) continue;
         
-        if (state.currentCharges < 1) {
-          updateUI('noCharges', 'warning', { time: Utils.formatTime(state.cooldown) });
-          await Utils.sleep(state.cooldown);
-          
-          const chargeUpdate = await WPlaceService.getCharges();
-          state.currentCharges = chargeUpdate.charges;
-          state.cooldown = chargeUpdate.cooldown;
-        }
+        const rgb = [r, g, b];
+        const colorId = findClosestColor(rgb, state.availableColors);
+        console.log(colorId)        
         
         const pixelX = startX + x;
         const pixelY = startY + y;
@@ -1117,7 +1112,17 @@
         const info = await WPlaceService.getPixelInfo(regionX, regionY, pixelX, pixelY);
         const painter = info?.paintedBy?.name;
         if (skipPainters.has(painter)) {
+          // pula sem gastar charge
           continue;
+        }
+
+        if (state.currentCharges < 1) {
+          updateUI('noCharges', 'warning', { time: Utils.formatTime(state.cooldown) });
+          await Utils.sleep(state.cooldown);
+          
+          const chargeUpdate = await WPlaceService.getCharges();
+          state.currentCharges = chargeUpdate.charges;
+          state.cooldown = chargeUpdate.cooldown;
         }
         
         const success = await WPlaceService.paintPixelInRegion(
