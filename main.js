@@ -1102,12 +1102,6 @@
         if (alpha < CONFIG.TRANSPARENCY_THRESHOLD) continue;
         if (Utils.isWhitePixel(r, g, b)) continue;
         
-        const info = await WPlaceService.getPixelInfo(regionX, regionY, pixelX, pixelY);
-        const painter = info?.paintedBy?.name;
-        if (skipPainters.has(painter)) {
-          continue;
-        }
-        
         if (state.currentCharges < 1) {
           updateUI('noCharges', 'warning', { time: Utils.formatTime(state.cooldown) });
           await Utils.sleep(state.cooldown);
@@ -1119,6 +1113,12 @@
         
         const pixelX = startX + x;
         const pixelY = startY + y;
+
+        const info = await WPlaceService.getPixelInfo(regionX, regionY, pixelX, pixelY);
+        const painter = info?.paintedBy?.name;
+        if (skipPainters.has(painter)) {
+          continue;
+        }
         
         const success = await WPlaceService.paintPixelInRegion(
           regionX,
