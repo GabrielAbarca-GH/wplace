@@ -328,7 +328,10 @@
 
   function getCurrentColorId(regionX, regionY, x, y) {
     const canvas = document.querySelector(`#region-${regionX}-${regionY} canvas`);
-    if (!canvas) return null;
+    if (!canvas){
+      console.log("n tem canvas robo burro")
+      return null;
+    } 
     const ctx = canvas.getContext('2d');
     const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
     return findClosestColor([r, g, b], state.availableColors);
@@ -1087,10 +1090,15 @@
         
         const rgb = [r, g, b];
         const colorId = findClosestColor(rgb, state.availableColors);
+        console.log("CLOSEST")
+        console.log(colorId)
 
         // se já estiver pintado com essa cor, pula sem fazer POST
+        console.log("CURRENT")
         const currentId = getCurrentColorId(regionX, regionY, startX + x, startY + y);
+        console.log(currentId)
         if (currentId === colorId) {
+          console.log("MESMA COR")
           state.paintedPixels++;
           if (state.paintedPixels % CONFIG.LOG_INTERVAL === 0) updateStats();
           continue;
